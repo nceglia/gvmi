@@ -1,9 +1,11 @@
-#!/usr/bin/env python3
+#!/Users/ceglian/miniforge3/envs/ml/bin/python
 """
-Command-line interface for computing mutual information from h5ad files.
+GVMI (GeneVector Mutual Information) - Command-line interface for computing 
+mutual information from h5ad files.
 
 This script loads an AnnData h5ad file, computes pairwise mutual information
-between genes, and saves the results to a pickle file.
+between genes using high-performance Rust backend, and saves the results to
+a pickle file for downstream analysis.
 """
 
 import argparse
@@ -15,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 import anndata
-import gene_mutual_info
+import gvmi
 
 
 def load_h5ad_data(h5ad_path, max_genes=None, min_cells=10, min_genes_per_cell=100):
@@ -116,7 +118,7 @@ def compute_and_save_mi(matrix, genes, output_path, metadata=None):
     
     start_time = time.time()
     try:
-        mi_results = gene_mutual_info.compute_mutual_information(matrix, genes)
+        mi_results = gvmi.compute_mutual_information(matrix, genes)
     except Exception as e:
         print(f"Error computing mutual information: {e}")
         sys.exit(1)
@@ -244,7 +246,7 @@ Examples:
     min_genes_per_cell = 0 if args.no_filter else args.min_genes_per_cell
     
     print("=" * 60)
-    print("Gene Mutual Information CLI")
+    print("GVMI - GeneVector Mutual Information")
     print("=" * 60)
     
     # Load and preprocess data

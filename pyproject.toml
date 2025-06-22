@@ -3,15 +3,27 @@ requires = ["maturin>=1.8,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "gene-mutual-info"
+name = "gvmi"
+description = "GeneVector Mutual Information - High-performance gene expression mutual information computation"
 requires-python = ">=3.8"
 dependencies = [
     "anndata>=0.8.0",
+    "numpy>=1.20.0",
 ]
+keywords = ["bioinformatics", "mutual-information", "gene-expression", "single-cell"]
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
 [tool.maturin]

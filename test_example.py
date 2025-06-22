@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Example usage of the gene mutual information library.
+Example usage of the GVMI (GeneVector Mutual Information) library.
 
 This script demonstrates how to use the Rust-based mutual information
-computation with numpy arrays and gene labels.
+computation with numpy arrays and gene labels through the Python API.
 """
 
 import numpy as np
-import gene_mutual_info
+import gvmi
 
 def create_sample_data():
     """Create sample gene expression data for testing."""
@@ -51,7 +51,7 @@ def main():
     
     print("Computing mutual information between all gene pairs...")
     try:
-        mi_results = gene_mutual_info.compute_mutual_information(matrix, genes)
+        mi_results = gvmi.compute_mutual_information(matrix, genes)
         
         print("\\nMutual Information Results:")
         print("=" * 50)

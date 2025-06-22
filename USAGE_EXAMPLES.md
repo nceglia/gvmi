@@ -1,13 +1,13 @@
-# Usage Examples
+# GVMI Usage Examples
 
-This document provides practical examples of using the gene mutual information CLI tools.
+This document provides practical examples of using **gvmi** (GeneVector Mutual Information) CLI tools for bioinformatics workflows.
 
 ## Quick Start
 
 ### 1. Test with small dataset
 ```bash
 # Process first 50 genes from an h5ad file
-python mi_cli.py /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o test_small.pkl --max-genes 50
+gvmi /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o test_small.pkl --max-genes 50
 
 # Inspect the results
 python inspect_pickle.py test_small.pkl --detailed
@@ -16,7 +16,7 @@ python inspect_pickle.py test_small.pkl --detailed
 ### 2. Process larger dataset
 ```bash
 # Process first 200 genes with custom filtering
-python mi_cli.py /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_200genes.pkl \
+gvmi /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_200genes.pkl \
     --max-genes 200 \
     --min-cells 5 \
     --min-genes-per-cell 200
@@ -28,10 +28,10 @@ python inspect_pickle.py mye_200genes.pkl --top 20
 ### 3. Full dataset processing
 ```bash
 # Process all genes (warning: this can take a long time for large datasets!)
-python mi_cli.py /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_full.pkl
+gvmi /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_full.pkl
 
 # Or with no filtering
-python mi_cli.py /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_raw.pkl --no-filter
+gvmi /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_raw.pkl --no-filter
 ```
 
 ## Available H5AD Files
@@ -41,31 +41,31 @@ Based on your data directory, here are some suggested commands for different dat
 ### Myeloid datasets
 ```bash
 # Myeloid with Palantir trajectories
-python mi_cli.py /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_palantir_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/h5ads/mye_with_palantir.h5ad -o mye_palantir_mi.pkl --max-genes 100
 
 # Macrophage dataset
-python mi_cli.py /Users/ceglian/Data/h5ads/macrophage_v3.h5ad -o macrophage_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/h5ads/macrophage_v3.h5ad -o macrophage_mi.pkl --max-genes 100
 
 # Annotated myeloid
-python mi_cli.py /Users/ceglian/Data/h5ads/annotated_myeloid_v100.h5ad -o annotated_mye_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/h5ads/annotated_myeloid_v100.h5ad -o annotated_mye_mi.pkl --max-genes 100
 ```
 
 ### T-cell datasets
 ```bash
 # T-cell harmony
-python mi_cli.py /Users/ceglian/Data/utility/data/tcell_harmony.h5ad -o tcell_harmony_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/utility/data/tcell_harmony.h5ad -o tcell_harmony_mi.pkl --max-genes 100
 
 # Raw T-cell entropy
-python mi_cli.py /Users/ceglian/Data/utility/data/raw_tcell_entropy.h5ad -o tcell_entropy_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/utility/data/raw_tcell_entropy.h5ad -o tcell_entropy_mi.pkl --max-genes 100
 ```
 
 ### TCR datasets
 ```bash
 # PBMC with TCR
-python mi_cli.py /Users/ceglian/Data/tcri/pbmc_conga.h5ad -o pbmc_tcr_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/tcri/pbmc_conga.h5ad -o pbmc_tcr_mi.pkl --max-genes 100
 
 # Smith checkpoint dataset
-python mi_cli.py /Users/ceglian/Data/tcri/smith_chkpt.h5ad -o smith_chkpt_mi.pkl --max-genes 100
+gvmi /Users/ceglian/Data/tcri/smith_chkpt.h5ad -o smith_chkpt_mi.pkl --max-genes 100
 ```
 
 ## Working with Results
@@ -174,11 +174,14 @@ print(f"Found {len(high_mi_pairs)} gene pairs with MI > {threshold}")
 
 ```bash
 # CLI help
-python mi_cli.py --help
+gvmi --help
 
 # Inspection help  
 python inspect_pickle.py --help
 
 # Check if library is working
-python -c "import gene_mutual_info; print('Library loaded successfully!')"
+python -c "import gvmi; print('Library loaded successfully!')"
+
+# Installation help
+./install.sh
 ```

@@ -181,9 +181,10 @@ fn compute_mutual_information(
     Ok(result.into())
 }
 
-/// A Python module implemented in Rust for computing gene mutual information.
+/// GVMI (GeneVector Mutual Information) - A Python module implemented in Rust 
+/// for high-performance gene mutual information computation.
 #[pymodule]
-fn gene_mutual_info(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn gvmi(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compute_mutual_information, m)?)?;
     Ok(())
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Utility script to inspect pickle files created by mi_cli.py
+Utility script to inspect pickle files created by gvmi
+(GeneVector Mutual Information)
 """
 
 import argparse

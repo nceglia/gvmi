@@ -1,11 +1,17 @@
 [package]
-name = "gene-mutual-info"
+name = "gvmi"
 version = "0.1.0"
 edition = "2021"
+description = "GeneVector Mutual Information - High-performance gene expression mutual information computation"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+repository = "https://github.com/yourusername/gvmi"
+keywords = ["bioinformatics", "mutual-information", "gene-expression", "single-cell"]
+categories = ["science", "algorithms"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "gene_mutual_info"
+name = "gvmi"
 crate-type = ["cdylib"]
 
 [dependencies]

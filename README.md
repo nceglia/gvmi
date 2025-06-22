@@ -1,10 +1,10 @@
-# Gene Mutual Information
+# GeneVector Mutual Information (gvmi)
 
-A high-performance Rust library with Python bindings for computing mutual information between gene expression profiles.
+A high-performance Rust library with Python bindings and CLI for computing mutual information between gene expression profiles.
 
 ## Overview
 
-This library provides an efficient implementation for calculating mutual information between pairs of genes in gene expression matrices. It uses Rust for computational performance with parallel processing, while providing a convenient Python interface through PyO3.
+**gvmi** (GeneVector Mutual Information) provides an efficient implementation for calculating mutual information between pairs of genes in gene expression matrices. It uses Rust for computational performance with parallel processing, while providing a convenient Python interface through PyO3 and a powerful command-line tool for bioinformatics workflows.
 
 ## Features
 
@@ -27,7 +27,7 @@ This library provides an efficient implementation for calculating mutual informa
 ```bash
 # Clone the repository
 git clone <repository_url>
-cd gene-mutual-info
+cd gvmi
 
 # Install maturin if you haven't already
 pip install maturin
@@ -42,14 +42,14 @@ maturin develop --release
 
 ```python
 import numpy as np
-import gene_mutual_info
+import gvmi
 
 # Create sample data: 5 genes x 100 samples
 matrix = np.random.randn(5, 100)
 genes = ['GENE_A', 'GENE_B', 'GENE_C', 'GENE_D', 'GENE_E']
 
 # Compute mutual information
-mi_results = gene_mutual_info.compute_mutual_information(matrix, genes)
+mi_results = gvmi.compute_mutual_information(matrix, genes)
 
 # Access results
 print(f"MI between GENE_A and GENE_B: {mi_results['GENE_A']['GENE_B']}")
@@ -122,24 +122,58 @@ This approach is more robust than fixed-width binning for gene expression data, 
 - **Memory efficiency**: Streaming computation without storing full pairwise matrices
 - **Fast discretization**: Optimized quantile calculation and binning
 
-## Command-Line Interface
+## Command-Line Interface (gvmi)
 
-The project includes a convenient CLI for processing h5ad files:
+The project includes `gvmi` (Gene Vector Mutual Information) - a convenient CLI for processing h5ad files.
+
+### Installation
+
+To install `gvmi` to your PATH:
+
+```bash
+# Run the installation script (recommended)
+./install.sh
+```
+
+This will:
+1. Create a symlink to `gvmi` in `~/.local/bin/`
+2. Add `~/.local/bin` to your PATH in your shell profile
+3. Make `gvmi` available from anywhere
+
+#### Manual Installation
+
+Alternatively, you can manually add the project directory to your PATH:
+
+```bash
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+export PATH="/path/to/gvmi:$PATH"
+
+# Or create a symlink
+ln -s /path/to/gvmi/gvmi ~/.local/bin/gvmi
+```
+
+#### Verify Installation
+
+```bash
+# Check if gvmi is available
+which gvmi
+gvmi --help
+```
 
 ### Basic Usage
 
 ```bash
 # Compute MI for all genes in an h5ad file
-python mi_cli.py input.h5ad -o results.pkl
+gvmi input.h5ad -o results.pkl
 
-# Or use the shell wrapper
+# Or use the shell wrapper (if not in PATH)
 ./compute_mi.sh input.h5ad -o results.pkl
 ```
 
 ### CLI Options
 
 ```bash
-python mi_cli.py --help
+gvmi --help
 ```
 
 - `--max-genes N`: Limit to first N genes (for testing)
@@ -152,13 +186,13 @@ python mi_cli.py --help
 
 ```bash
 # Quick test with 100 genes
-python mi_cli.py data.h5ad -o test.pkl --max-genes 100
+gvmi data.h5ad -o test.pkl --max-genes 100
 
 # Custom filtering
-python mi_cli.py data.h5ad -o results.pkl --min-cells 5 --min-genes-per-cell 200
+gvmi data.h5ad -o results.pkl --min-cells 5 --min-genes-per-cell 200
 
 # No filtering (use all genes/cells)
-python mi_cli.py data.h5ad -o raw_results.pkl --no-filter
+gvmi data.h5ad -o raw_results.pkl --no-filter
 ```
 
 ### Inspecting Results
@@ -194,6 +228,26 @@ metadata = data['metadata']
 print(f"Source file: {metadata['source_file']}")
 print(f"Computation time: {data['computation_time']:.2f} seconds")
 ```
+
+## Updating GVMI
+
+For updating the gvmi program after making changes:
+
+### Quick Update
+```bash
+# Automated update script
+./update_gvmi.sh
+```
+
+### Manual Update
+```bash
+cd /Users/ceglian/Codebase/GitHub/gvmi
+cargo clean  # optional
+/Users/ceglian/miniforge3/envs/ml/bin/python -m maturin develop --release
+gvmi --help  # verify
+```
+
+See [BUILD_AND_INSTALL.md](BUILD_AND_INSTALL.md) for detailed instructions and [QUICK_UPDATE.md](QUICK_UPDATE.md) for a quick reference.
 
 ## Testing
 
