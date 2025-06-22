@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+"""
+Command-line interface for computing mutual information from h5ad files.
+
+This script loads an AnnData h5ad file, computes pairwise mutual information
+between genes, and saves the results to a pickle file.
+"""
+
+import argparse
+import pickle
+import time
+import sys
+import os
+from pathlib import Path
+
+import numpy as np
+import anndata
+import gene_mutual_info
+
+
+def load_h5ad_data(h5ad_path, max_genes=None, min_cells=10, min_genes_per_cell=100):
+    """
+    Load and preprocess data from h5ad file.
+    
+    Args:
+        h5ad_path: Path to the h5ad file
+        max_genes: Maximum number of genes to include (for testing/performance)
+        min_cells: Minimum number of cells a gene must be expressed in
+        min_genes_per_cell: Minimum number of genes per cell to keep
+    
+    Returns:
+        matrix: numpy array (genes x cells)
+        genes: list of gene names
+        metadata: dict with preprocessing info
+    """
+    print(f"Loading AnnData from: {h5ad_path}")
+    start_time = time.time()
+    
+    try:
+        adata = anndata.read_h5ad(h5ad_path)
+    except Exception as e:
+        print(f"Error loading h5ad file: {e}")
+        sys.exit(1)
+    
+    load_time = time.time() - start_time
+    print(f"  Loaded in {load_time:.2f} seconds")
+    print(f"  Original shape: {adata.shape} (cells x genes)")
+    
+    # Basic filtering
+    original_cells, original_genes = adata.shape
+    
+    # Filter cells with too few genes
+    if min_genes_per_cell > 0:
+        gene_counts = np.array((adata.X > 0).sum(axis=1)).flatten()
+        cell_mask = gene_counts >= min_genes_per_cell
+        adata = adata[cell_mask, :]
+        print(f"  Filtered cells: {original_cells} -> {adata.shape[0]} (min {min_genes_per_cell} genes/cell)")
+    
+    # Filter genes expressed in too few cells
+    if min_cells > 0:
+        if hasattr(adata.X, 'toarray'):
+            cell_counts = np.array((adata.X > 0).sum(axis=0)).flatten()
+        else:
+            cell_counts = np.array((adata.X > 0).sum(axis=0)).flatten()
+        gene_mask = cell_counts >= min_cells
+        adata = adata[:, gene_mask]
+        print(f"  Filtered genes: {original_genes} -> {adata.shape[1]} (min {min_cells} cells/gene)")
+    
+    # Extract matrix and gene names
+    if hasattr(adata.X, 'toarray'):
+        matrix = adata.X.T.toarray()  # Transpose to genes x cells
+    else:
+        matrix = adata.X.T
+    
+    # Ensure proper numpy array format
+    matrix = np.ascontiguousarray(matrix, dtype=np.float64)
+    genes = list(adata.var_names)
+    
+    # Optionally limit number of genes
+    if max_genes and len(genes) > max_genes:
+        print(f"  Limiting to first {max_genes} genes for performance")
+        matrix = matrix[:max_genes]
+        genes = genes[:max_genes]
+    
+    print(f"  Final shape: {matrix.shape} (genes x cells)")
+    print(f"  Memory footprint: ~{matrix.nbytes / 1024 / 1024:.1f} MB")
+    
+    metadata = {
+        'original_shape': (original_cells, original_genes),
+        'filtered_shape': adata.shape,
+        'final_shape': matrix.shape,
+        'load_time': load_time,
+        'min_cells': min_cells,
+        'min_genes_per_cell': min_genes_per_cell,
+        'max_genes_used': max_genes,
+        'source_file': str(h5ad_path)
+    }
+    
+    return matrix, genes, metadata
+
+
+def compute_and_save_mi(matrix, genes, output_path, metadata=None):
+    """
+    Compute mutual information and save to pickle file.
+    
+    Args:
+        matrix: numpy array (genes x cells)
+        genes: list of gene names
+        output_path: path to save pickle file
+        metadata: optional metadata dict to include in output
+    
+    Returns:
+        mi_results: the computed MI dictionary
+    """
+    print(f"Computing mutual information for {len(genes)} genes...")
+    
+    start_time = time.time()
+    try:
+        mi_results = gene_mutual_info.compute_mutual_information(matrix, genes)
+    except Exception as e:
+        print(f"Error computing mutual information: {e}")
+        sys.exit(1)
+    
+    compute_time = time.time() - start_time
+    n_pairs = (len(genes) * (len(genes) + 1)) // 2
+    
+    print(f"  Computed {n_pairs} gene pairs in {compute_time:.2f} seconds")
+    print(f"  Rate: {n_pairs / compute_time:.0f} pairs/second")
+    
+    # Prepare output data
+    output_data = {
+        'mutual_information': mi_results,
+        'genes': genes,
+        'computation_time': compute_time,
+        'n_genes': len(genes),
+        'n_pairs': n_pairs,
+        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'metadata': metadata or {}
+    }
+    
+    # Save to pickle file
+    print(f"Saving results to: {output_path}")
+    try:
+        with open(output_path, 'wb') as f:
+            pickle.dump(output_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        file_size = os.path.getsize(output_path) / 1024 / 1024
+        print(f"  Saved {file_size:.1f} MB pickle file")
+        
+    except Exception as e:
+        print(f"Error saving pickle file: {e}")
+        sys.exit(1)
+    
+    return mi_results
+
+
+def main():
+    """Main CLI function."""
+    parser = argparse.ArgumentParser(
+        description="Compute mutual information between genes from h5ad files",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic usage
+  gvmi input.h5ad -o results.pkl
+  
+  # Limit to first 100 genes for testing
+  gvmi input.h5ad -o test.pkl --max-genes 100
+  
+  # Custom filtering parameters
+  gvmi input.h5ad -o results.pkl --min-cells 5 --min-genes-per-cell 200
+  
+  # Specify custom output location
+  gvmi /path/to/data.h5ad -o /path/to/output/mi_results.pkl
+        """
+    )
+    
+    parser.add_argument(
+        'input_h5ad',
+        help='Path to input h5ad file'
+    )
+    
+    parser.add_argument(
+        '-o', '--output',
+        required=True,
+        help='Path to output pickle file'
+    )
+    
+    parser.add_argument(
+        '--max-genes',
+        type=int,
+        help='Maximum number of genes to include (for testing/performance)'
+    )
+    
+    parser.add_argument(
+        '--min-cells',
+        type=int,
+        default=10,
+        help='Minimum number of cells a gene must be expressed in (default: 10)'
+    )
+    
+    parser.add_argument(
+        '--min-genes-per-cell',
+        type=int,
+        default=100,
+        help='Minimum number of genes per cell to keep (default: 100)'
+    )
+    
+    parser.add_argument(
+        '--no-filter',
+        action='store_true',
+        help='Skip gene/cell filtering steps'
+    )
+    
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Overwrite output file if it exists'
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate input file
+    input_path = Path(args.input_h5ad)
+    if not input_path.exists():
+        print(f"Error: Input file does not exist: {input_path}")
+        sys.exit(1)
+    
+    if not input_path.suffix.lower() == '.h5ad':
+        print(f"Warning: Input file doesn't have .h5ad extension: {input_path}")
+    
+    # Validate output path
+    output_path = Path(args.output)
+    if output_path.exists() and not args.force:
+        print(f"Error: Output file already exists: {output_path}")
+        print("Use --force to overwrite")
+        sys.exit(1)
+    
+    # Create output directory if needed
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Set filtering parameters
+    min_cells = 0 if args.no_filter else args.min_cells
+    min_genes_per_cell = 0 if args.no_filter else args.min_genes_per_cell
+    
+    print("=" * 60)
+    print("Gene Mutual Information CLI")
+    print("=" * 60)
+    
+    # Load and preprocess data
+    matrix, genes, metadata = load_h5ad_data(
+        input_path, 
+        max_genes=args.max_genes,
+        min_cells=min_cells,
+        min_genes_per_cell=min_genes_per_cell
+    )
+    
+    print()
+    
+    # Compute and save mutual information
+    mi_results = compute_and_save_mi(matrix, genes, output_path, metadata)
+    
+    print()
+    print("=" * 60)
+    print("Computation completed successfully!")
+    print(f"Results saved to: {output_path}")
+    print(f"Use the following to load results:")
+    print(f"  import pickle")
+    print(f"  with open('{output_path}', 'rb') as f:")
+    print(f"      data = pickle.load(f)")
+    print(f"  mi_dict = data['mutual_information']")
+    print("=" * 60)
+
+
+if __name__ == '__main__':
+    main()
