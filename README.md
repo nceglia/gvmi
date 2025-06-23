@@ -1,6 +1,6 @@
 # GeneVector Mutual Information (gvmi)
 
-A high-performance Rust library with Python bindings and CLI for computing mutual information between gene expression profiles.
+High-performance Rust library with Python bindings and CLI for computing mutual information between gene expression profiles.
 
 ## Overview
 
